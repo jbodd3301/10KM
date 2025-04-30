@@ -1,0 +1,207 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Programme 10KM</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      padding: 1em;
+      background-color: #f0f2f5;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #007BFF;
+      margin-bottom: 1em;
+    }
+    .week {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 1.5em;
+      padding: 1em;
+      transition: all 0.3s ease;
+    }
+    .week:hover {
+      transform: scale(1.01);
+    }
+    .week h2 {
+      color: #007BFF;
+      margin: 0 0 0.5em 0;
+    }
+    .session {
+      margin-bottom: 0.5em;
+    }
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 0.5em 1em;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 0.5em;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    label {
+      display: block;
+      margin-top: 0.3em;
+    }
+    input[type="checkbox"] {
+      margin-right: 0.5em;
+    }
+    .full-details {
+      display: none;
+      margin-top: 1em;
+    }
+    .full-details p {
+      margin: 0.2em 0;
+    }
+    .icon {
+      margin-right: 0.4em;
+    }
+    .reset-container, .summary-container {
+      text-align: center;
+      margin-top: 2em;
+    }
+    .progress-bar {
+      width: 80%;
+      background-color: #e0e0e0;
+      border-radius: 25px;
+      margin: 0 auto 1em auto;
+      overflow: hidden;
+      height: 20px;
+    }
+    .progress-fill {
+      height: 100%;
+      background-color: #007BFF;
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+    .completed-week {
+      border: 2px solid #28a745;
+    }
+  </style>
+</head>
+<body>
+  <h1>Programme 10KM – 3 sorties/semaine</h1>
+  <div class="summary-container">
+    <div class="progress-bar">
+      <div id="progressFill" class="progress-fill"></div>
+    </div>
+    <span id="summaryText"></span>
+  </div>
+  <div id="program"></div>
+  <div class="reset-container">
+    <button onclick="resetCheckboxes()">Réinitialiser toutes les cases</button>
+  </div>
+
+  <script>
+    const program = [
+      ["4 km facile", "5 km avec 3x1' rapide (récup 2')", "6 km endurance"],
+      ["4.5 km modéré", "5 km avec 4x1' rapide (récup 2')", "7 km endurance"],
+      ["5 km constant", "6 km avec 4x1'30 rapide (récup 1'30)", "8 km endurance"],
+      ["5 km avec 4x20'' accélérations", "6 km avec 5x1' rapide (récup 1'30)", "8 km facile"],
+      ["5 km continu", "7 km avec 4x1'15 rapide (récup 1'30)", "9 km endurance"],
+      ["6 km modéré", "7 km avec 5x1' rapide (récup 1'30)", "9 km régulier"],
+      ["5 km à allure cible", "6 km tempo (4 km soutenu)", "10 km simulation"],
+      ["5 km avec 3x30'' accélérations", "6 km avec 4x1' rapide (récup 1')", "8 km relax"],
+      ["5 km léger avec accél.", "4 km alterné (500m rapide/lent)", "Course 10 km"]
+    ];
+
+    const detailsText = [
+      "<p><strong>Mardi :</strong> 4 km à rythme conversationnel.</p><p><strong>Jeudi :</strong> 5 km dont 3 intervalles rapides d'une minute, récupération active 2 minutes.</p><p><strong>Dimanche :</strong> 6 km en endurance fondamentale, restez confortable.</p>",
+      "<p><strong>Mardi :</strong> 4.5 km à rythme modéré.</p><p><strong>Jeudi :</strong> 5 km dont 4 intervalles rapides d'une minute avec récupération de 2 minutes.</p><p><strong>Dimanche :</strong> 7 km lent et constant.</p>",
+      "<p><strong>Mardi :</strong> 5 km à rythme régulier.</p><p><strong>Jeudi :</strong> 6 km avec 4 x 1min30 rapides, récupération 1min30.</p><p><strong>Dimanche :</strong> 8 km en endurance facile.</p>",
+      "<p><strong>Mardi :</strong> 5 km avec 4 accélérations de 20 secondes.</p><p><strong>Jeudi :</strong> 6 km avec 5 x 1min rapide, récupération 1min30.</p><p><strong>Dimanche :</strong> 8 km à rythme facile.</p>",
+      "<p><strong>Mardi :</strong> 5 km en continu, sans pause.</p><p><strong>Jeudi :</strong> 7 km avec 4 x 1min15 rapides, récupération 1min30.</p><p><strong>Dimanche :</strong> 9 km en endurance.</p>",
+      "<p><strong>Mardi :</strong> 6 km à rythme modéré.</p><p><strong>Jeudi :</strong> 7 km avec 5 x 1min rapide, récupération 1min30.</p><p><strong>Dimanche :</strong> 9 km à rythme constant.</p>",
+      "<p><strong>Mardi :</strong> 5 km à l’allure prévue du 10 km.</p><p><strong>Jeudi :</strong> 6 km dont 4 km à tempo soutenu.</p><p><strong>Dimanche :</strong> Simulation de course 10 km.</p>",
+      "<p><strong>Mardi :</strong> 5 km avec 3 accélérations de 30 secondes.</p><p><strong>Jeudi :</strong> 6 km avec 4 x 1min rapide, récupération 1min.</p><p><strong>Dimanche :</strong> 8 km relax et léger.</p>",
+      "<p><strong>Mardi :</strong> 5 km très léger avec quelques accélérations.</p><p><strong>Jeudi :</strong> 4 km alternant 500 m rapide/lent.</p><p><strong>Dimanche :</strong> Jour de course – 10 km!</p>"
+    ];
+
+    const days = ["Mardi", "Jeudi", "Dimanche"];
+    const icons = ["🏃‍♂️", "⏱️", "🌞"];
+    const container = document.getElementById("program");
+    const summaryText = document.getElementById("summaryText");
+    const progressFill = document.getElementById("progressFill");
+
+    function updateSummary() {
+      let total = 0, completed = 0;
+      for (let i = 0; i < program.length; i++) {
+        let weekCompleted = true;
+        for (let j = 0; j < 3; j++) {
+          const checkboxId = `week${i}-day${j}`;
+          if (localStorage.getItem(checkboxId) === "true") completed++;
+          else weekCompleted = false;
+          total++;
+        }
+        document.getElementById(`week-${i}`).classList.toggle("completed-week", weekCompleted);
+      }
+      summaryText.textContent = `Séances complétées : ${completed} sur ${total}`;
+      progressFill.style.width = `${(completed / total) * 100}%`;
+    }
+
+    program.forEach((week, i) => {
+      const weekDiv = document.createElement("div");
+      weekDiv.className = "week";
+      weekDiv.id = `week-${i}`;
+
+      const title = document.createElement("h2");
+      title.textContent = `Semaine ${i + 1}`;
+      weekDiv.appendChild(title);
+
+      week.forEach((session, j) => {
+        const label = document.createElement("label");
+        label.className = "session";
+        const checkboxId = `week${i}-day${j}`;
+        const checked = localStorage.getItem(checkboxId) === "true" ? "checked" : "";
+        label.innerHTML = `
+          <input type="checkbox" id="${checkboxId}" ${checked} />
+          <span class="icon">${icons[j]}</span><strong>${days[j]}:</strong> ${session}
+        `;
+        label.querySelector("input").addEventListener("change", (e) => {
+          localStorage.setItem(checkboxId, e.target.checked);
+          updateSummary();
+        });
+        weekDiv.appendChild(label);
+      });
+
+      const button = document.createElement("button");
+      button.textContent = "Détail de la semaine";
+      const fullDetails = document.createElement("div");
+      fullDetails.className = "full-details";
+      fullDetails.innerHTML = detailsText[i];
+
+      button.addEventListener("click", () => {
+        fullDetails.style.display = fullDetails.style.display === "none" ? "block" : "none";
+      });
+
+      weekDiv.appendChild(button);
+      weekDiv.appendChild(fullDetails);
+      container.appendChild(weekDiv);
+    });
+
+    function resetCheckboxes() {
+      if (confirm("Es-tu sûr de vouloir réinitialiser toutes les cases cochées?")) {
+        for (let i = 0; i < program.length; i++) {
+          for (let j = 0; j < 3; j++) {
+            const checkboxId = `week${i}-day${j}`;
+            localStorage.removeItem(checkboxId);
+            const checkbox = document.getElementById(checkboxId);
+            if (checkbox) checkbox.checked = false;
+          }
+        }
+        updateSummary();
+      }
+    }
+
+    updateSummary();
+  </script>
+</body>
+</html>
